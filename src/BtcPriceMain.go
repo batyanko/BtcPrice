@@ -5,20 +5,45 @@ import (
 	"net/http"
 	"io/ioutil"
 	"strconv"
+	"time"
 )
+
+type BtcPriceThing struct {
+	priceBtc float64
+}
 
 func main() {
 	fmt.Println("halloo")
+	b := BtcPriceThing{0}
+	ch := make(chan float64)
 
-	resp, err := http.Get("https://blockchain.info/tobtc?currency=USD&value=1")
-	//resp, err := http.Get("http://www.batyanko.com")
-	body, err2 := ioutil.ReadAll(resp.Body)
-
-	priceUsd, err3:= strconv.ParseFloat(string(body), 32)
-
-	priceBtc := 1/priceUsd
-
-	fmt.Println(priceBtc, err, err2, err3)
+	go func() {
+		for {
+			b.getResponse(ch)
+			time.Sleep(10 *time.Second)
+		}
+	}()
+	for i := range ch {
+		fmt.Println(i)
+	}
 
 }
 
+func (b *BtcPriceThing) getResponse(ch chan float64) {
+	resp, err := http.Get("https://blockchain.info/tobtc?currency=USD&value=1")
+	if err != nil {
+		fmt.Println("Could not get response from website.")
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Could not read response from website.")
+	}
+
+	priceUsd, err:= strconv.ParseFloat(string(body), 32)
+	if err != nil {
+		fmt.Println("Could not parse Btc price date.")
+	}
+
+	b.priceBtc = 1/priceUsd
+	ch <- b.priceBtc
+}
