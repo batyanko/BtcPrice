@@ -7,6 +7,19 @@ import (
 	"strconv"
 )
 
+type BtcPriceThing struct {
+	//Price of BTC in USD
+	priceBtc float64
+	//Price of USD in BTC
+	priceUsd float64
+	resp *http.Response
+	err error
+	body []byte
+}
+
+const waitTime = 10
+const priceRefUrl = "https://blockchain.info/tobtc?currency=USD&value=1"
+
 func (b *BtcPriceThing) GetResponse() {
 	b.resp, b.err = http.Get(priceRefUrl)
 	if b.err != nil {
